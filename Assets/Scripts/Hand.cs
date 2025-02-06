@@ -1,18 +1,23 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HandArea : MonoBehaviour
+public class Hand : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public List<Card> cardsInHand = new();
+
+    public void AddCardToHand(Card card)
     {
-        
+        cardsInHand.Add(card);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void RemoveCardFromHand(Card card)
     {
-        
+        cardsInHand.Remove(card);
     }
+
+    public int GetCardCount()
+    {
+        return cardsInHand.Count;
+    }
+
 }
