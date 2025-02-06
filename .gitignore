@@ -43,3 +43,4 @@ Assets/StreamingAssets/google-services-desktop.json.meta
 .idea/
 *.DS_Store
  
+Builds/
