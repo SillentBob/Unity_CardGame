@@ -1,4 +1,4 @@
-﻿namespace Mercop.Core.Events
+﻿namespace DefaultNamespace
 {
     public class EngineEvent : BaseEvent
     {

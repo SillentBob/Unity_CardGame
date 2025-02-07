@@ -1,23 +1,34 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Const;
+using DefaultNamespace;
 using UnityEngine;
+using UnityEngine.UI;
 using Random = System.Random;
 
 public class DeckManager : MonoBehaviour
 {
-    [SerializeField] private CardsDatabase cardDatabase;
-    [SerializeField] private GameSettings gameSettings;
     [SerializeField] private GameObject cardPrefab;
 
+    private CardsDatabase _cardDatabase;
+    private GameSettings _gameSettings;
+
     private Hand _hand;
+    private PlayArea _playArea;
+    private Button _endTurnButton;
 
     private readonly List<CardModel> _deck = new();
 
     private void Start()
     {
+        _cardDatabase = Game.Instance.CardDatabase;
+        _gameSettings = Game.Instance.GameSettings;
         _hand = GameObject.FindGameObjectWithTag(GameObjectTags.PLAYER_HAND).GetComponent<Hand>();
+        _playArea = GameObject.FindGameObjectWithTag(GameObjectTags.PLAY_AREA).GetComponent<PlayArea>();
+        _endTurnButton = GameObject.FindGameObjectWithTag(GameObjectTags.END_TURN_BUTTON).GetComponent<Button>();
+        _endTurnButton.onClick.AddListener(EndTurn);
         InitializeDeck();
 
 #if UNITY_EDITOR
@@ -37,10 +48,10 @@ public class DeckManager : MonoBehaviour
 
     private void InitializeDeck()
     {
-        var variousCardsCount = cardDatabase.cardModels.Count;
-        for (int i = 0; i < gameSettings.initialDeckSize; i++)
+        var variousCardsCount = _cardDatabase.cardModels.Count;
+        for (int i = 0; i < _gameSettings.initialDeckSize; i++)
         {
-            _deck.Add(cardDatabase.cardModels[i % variousCardsCount]);
+            _deck.Add(_cardDatabase.cardModels[i % variousCardsCount]);
         }
     }
 
@@ -58,7 +69,7 @@ public class DeckManager : MonoBehaviour
 
     private void DrawStartingHand()
     {
-        for (int i = 0; i < gameSettings.playerHandSize; i++)
+        for (int i = 0; i < _gameSettings.playerHandSize; i++)
         {
             DrawCard();
         }
@@ -84,10 +95,17 @@ public class DeckManager : MonoBehaviour
 
     private void EndTurn()
     {
-        int cardsToDraw = gameSettings.playerHandSize - _hand.GetCardCount();
+        _playArea.RemoveAllCards();
+        
+        int cardsToDraw = _gameSettings.playerHandSize - _hand.GetCardCount();
         for (int i = 0; i < cardsToDraw; i++)
         {
             DrawCard();
         }
+    }
+
+    private void OnDestroy()
+    {
+        _endTurnButton.onClick.RemoveListener(EndTurn);
     }
 }

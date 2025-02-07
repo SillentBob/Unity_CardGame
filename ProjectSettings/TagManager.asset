@@ -7,6 +7,9 @@ TagManager:
   - DiscardPile
   - DragAnchor
   - PlayerHand
+  - EndTurnButton
+  - ExitGameplayButton
+  - PlayArea
   layers:
   - Default
   - TransparentFX

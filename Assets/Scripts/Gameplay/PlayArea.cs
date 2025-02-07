@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Const;
 using UnityEngine;
 
@@ -20,7 +19,13 @@ public class PlayArea : MonoBehaviour
         card.transform.SetParent(this.transform);
     }
 
-    public void RemoveCard(Card card)
+    public void RemoveAllCards()
+    {
+        _cardsInPlayArea.ForEach(RemoveCard);
+        _cardsInPlayArea.Clear();
+    }
+
+    private void RemoveCard(Card card)
     {
         _discardPile.AddCardToDiscardPile(card); //TODO change
     }
