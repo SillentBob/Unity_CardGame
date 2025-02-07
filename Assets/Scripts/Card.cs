@@ -1,9 +1,16 @@
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    [SerializeField] private Image image;
+
+    [SerializeField] [FormerlySerializedAs("centerObjectToDragOrigin")]
+    private bool centerObjectToDragPressOrigin;
+
     public Transform ParentToReturnTo
     {
         get => _parentToReturnTo;
@@ -12,28 +19,35 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     private Transform _parentToReturnTo = null;
     private Vector3 _dragStartPosition;
+    private Vector2 _dragPressToDraggedObjectDelta;
     private bool _isDraggable = true;
     private GameObject _discardPile;
+    private GameObject _dragAnchor;
 
     private void Start()
     {
         _discardPile = GameObject.FindGameObjectWithTag("DiscardPile");
+        _dragAnchor = GameObject.FindGameObjectWithTag("DragAnchor");
     }
 
     public void Setup([NotNull] CardModel model)
     {
-        //this.cardModel = model;
+        image.sprite = model.sprite;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!_isDraggable) return;
+        Debug.Log("OnBeginDrag Card");
+        if (!_isDraggable)
+        {
+            return;
+        }
 
         _parentToReturnTo = transform.parent;
         _dragStartPosition = transform.position;
-
-        this.transform.SetParent(transform.root);
-        GetComponent<CanvasGroup>().blocksRaycasts = false;
+        _dragPressToDraggedObjectDelta = (Vector2)_dragStartPosition - eventData.pressPosition;
+        transform.SetParent(_dragAnchor.transform);
+        //GetComponent<CanvasGroup>().blocksRaycasts = false;
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -43,14 +57,17 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         {
             return;
         }
-        this.transform.position = eventData.position;
+        Debug.Log("OnDrag Card");
+        transform.position = centerObjectToDragPressOrigin
+            ? eventData.position
+            : eventData.position + _dragPressToDraggedObjectDelta;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         if (!_isDraggable) return;
 
-        GetComponent<CanvasGroup>().blocksRaycasts = true;
+        //GetComponent<CanvasGroup>().blocksRaycasts = true;
         DropArea dropZone = null;
 
         foreach (var result in eventData.hovered)
@@ -77,7 +94,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             }
         }
 
-        this.transform.SetParent(_parentToReturnTo);
+        transform.SetParent(_parentToReturnTo);
         transform.position = _dragStartPosition;
     }
 
@@ -86,9 +103,9 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         _isDraggable = draggable;
     }
 
-    public void DiscardCard()
+    private void DiscardCard()
     {
         transform.SetParent(_discardPile.transform);
-        Destroy(this.gameObject);
+        Destroy(gameObject);
     }
 }

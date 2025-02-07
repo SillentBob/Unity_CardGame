@@ -1,49 +1,48 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class DeckManager : MonoBehaviour
 {
-    public List<CardModel> cardDatabase;
-    public List<CardModel> deck = new();
+    [SerializeField] [FormerlySerializedAs("cardDb")] 
+    private CardsDatabase cardDatabase;
+    
+    public GameSettings gameSettings;
     public GameObject cardPrefab;
-    public int startingHandSize = 5;
     public Hand hand;
+
+    private readonly List<CardModel> _deck = new();
 
     private void Start()
     {
-        InitializeDeck();
-        ShuffleDeck();
-        DrawStartingHand();
+        // InitializeDeck();
+        // ShuffleDeck();
+        // DrawStartingHand();
     }
 
     private void InitializeDeck()
     {
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < gameSettings.initialDeckSize; i++)
         {
-            deck.Add(cardDatabase[0]);
-        }
-
-        for (int i = 0; i < 10; i++)
-        {
-            deck.Add(cardDatabase[1]);
+            _deck.Add(cardDatabase.cardModels[0]);
         }
     }
 
     private void ShuffleDeck()
     {
         System.Random rng = new System.Random();
-        int n = deck.Count;
+        int n = _deck.Count;
         while (n > 1)
         {
             n--;
             int k = rng.Next(n + 1);
-            (deck[k], deck[n]) = (deck[n], deck[k]); //swap
+            (_deck[k], _deck[n]) = (_deck[n], _deck[k]); //swap
         }
     }
 
     private void DrawStartingHand()
     {
-        for (int i = 0; i < startingHandSize; i++)
+        for (int i = 0; i < gameSettings.playerHandSize; i++)
         {
             DrawCard();
         }
@@ -51,10 +50,10 @@ public class DeckManager : MonoBehaviour
 
     private void DrawCard()
     {
-        if (deck.Count > 0)
+        if (_deck.Count > 0)
         {
-            CardModel cardData = deck[0]; // Pobierz CardData z talii.
-            deck.RemoveAt(0);
+            CardModel cardData = _deck[0];
+            _deck.RemoveAt(0);
 
             GameObject cardObject = Instantiate(cardPrefab, hand.transform);
             Card card = cardObject.GetComponent<Card>();
@@ -69,10 +68,7 @@ public class DeckManager : MonoBehaviour
 
     private void EndTurn()
     {
-        //TODO apply cards effects
-        
-        // Dociągnij brakujące karty do ręki
-        int cardsToDraw = startingHandSize - hand.GetCardCount();
+        int cardsToDraw = gameSettings.playerHandSize - hand.GetCardCount();
         for (int i = 0; i < cardsToDraw; i++)
         {
             DrawCard();
