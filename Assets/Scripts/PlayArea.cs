@@ -15,11 +15,12 @@ public class PlayArea : MonoBehaviour
 
     public void PlayCard(Card card)
     {
+        Debug.Log($"Playarea PlayCard {card.name}");
         _cardsInPlayArea.Add(card);
         card.transform.SetParent(this.transform);
     }
 
-    private void RemoveCardFromPlayArea(Card card)
+    public void RemoveCard(Card card)
     {
         _discardPile.AddCardToDiscardPile(card); //TODO change
     }
