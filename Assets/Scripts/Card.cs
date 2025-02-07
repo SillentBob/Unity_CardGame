@@ -37,7 +37,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("OnBeginDrag Card");
+        Debug.Log($"OnBeginDrag Card {this}");
         if (!_isDraggable)
         {
             return;
@@ -57,7 +57,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         {
             return;
         }
-        Debug.Log("OnDrag Card");
+        Debug.Log($"OnDrag Card {this}");
         transform.position = centerObjectToDragPressOrigin
             ? eventData.position
             : eventData.position + _dragPressToDraggedObjectDelta;
