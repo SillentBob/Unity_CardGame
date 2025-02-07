@@ -13,7 +13,31 @@ MonoBehaviour:
   m_Name: CardsDatabase
   m_EditorClassIdentifier: 
   cardModels:
-  - name: 
+  - name: Card_1
     description: 
     useResourceCost: 0
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: dfb2d1e51934b7242aec9ebfd0095646, type: 3}
+  - name: Card_2
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: ba3ad41f5a37b0544bbc5a2ada0098f0, type: 3}
+  - name: Card_3
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: f55d7c89411b02346966303831237ea2, type: 3}
+  - name: Card_4
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: 3b3166329f585ce42b981f277c3eae93, type: 3}
+  - name: Card_5
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: 0c8568e01ad956842a51e9bc33be8d6b, type: 3}
+  - name: Card_6
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: f10f634ae6eebc645a5ed2dc1eb6eb4f, type: 3}
+  - name: Card_7
+    description: 
+    useResourceCost: 0
+    sprite: {fileID: 21300000, guid: 3bfa7cac20a7e244f8b083e434b643ab, type: 3}

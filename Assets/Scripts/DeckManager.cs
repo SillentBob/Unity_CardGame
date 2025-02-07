@@ -15,16 +15,17 @@ public class DeckManager : MonoBehaviour
 
     private void Start()
     {
-        // InitializeDeck();
-        // ShuffleDeck();
+        InitializeDeck();
+        ShuffleDeck();
         // DrawStartingHand();
     }
 
     private void InitializeDeck()
     {
+        var variousCardsCount = cardDatabase.cardModels.Count;
         for (int i = 0; i < gameSettings.initialDeckSize; i++)
         {
-            _deck.Add(cardDatabase.cardModels[0]);
+            _deck.Add(cardDatabase.cardModels[i%variousCardsCount]);
         }
     }
 
