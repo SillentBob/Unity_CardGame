@@ -6,6 +6,7 @@ TagManager:
   tags:
   - DiscardPile
   - DragAnchor
+  - PlayerHand
   layers:
   - Default
   - TransparentFX

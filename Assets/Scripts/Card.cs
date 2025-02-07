@@ -1,3 +1,4 @@
+using Const;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -26,8 +27,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     private void Start()
     {
-        _discardPile = GameObject.FindGameObjectWithTag("DiscardPile");
-        _dragAnchor = GameObject.FindGameObjectWithTag("DragAnchor");
+        _discardPile = GameObject.FindGameObjectWithTag(GameObjectTags.DISCARD_PILE);
+        _dragAnchor = GameObject.FindGameObjectWithTag(GameObjectTags.DRAG_ANCHOR);
     }
 
     public void Setup([NotNull] CardModel model)

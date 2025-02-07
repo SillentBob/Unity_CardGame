@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Const;
 using UnityEngine;
 
 public class PlayArea : MonoBehaviour
@@ -9,7 +10,7 @@ public class PlayArea : MonoBehaviour
 
     private void Start()
     {
-        _discardPile = GameObject.FindGameObjectWithTag("DiscardPile").GetComponent<DiscardPile>();
+        _discardPile = GameObject.FindGameObjectWithTag(GameObjectTags.DISCARD_PILE).GetComponent<DiscardPile>();
     }
 
     public void PlayCard(Card card)
