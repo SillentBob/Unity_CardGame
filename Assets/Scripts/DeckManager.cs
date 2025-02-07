@@ -1,22 +1,37 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class DeckManager : MonoBehaviour
 {
-    [SerializeField] [FormerlySerializedAs("cardDb")] 
+    [SerializeField]
     private CardsDatabase cardDatabase;
+    [SerializeField]
+    private GameSettings gameSettings;
+    [SerializeField]
+    private GameObject cardPrefab;
     
-    public GameSettings gameSettings;
-    public GameObject cardPrefab;
-    public Hand hand;
+    private Hand hand;
 
     private readonly List<CardModel> _deck = new();
 
     private void Start()
     {
         InitializeDeck();
+        
+#if UNITY_EDITOR
+        StringBuilder deckString = new();
+        Debug.Log($"Deck before shuffle: {deckString.AppendJoin(',',_deck.Select(model => model.name))}");
+#endif
+        
         ShuffleDeck();
+        
+#if UNITY_EDITOR
+        deckString.Clear();
+        Debug.Log($"Deck before shuffle: {deckString.AppendJoin(',',_deck.Select(model => model.name))}");
+#endif
+        
         // DrawStartingHand();
     }
 

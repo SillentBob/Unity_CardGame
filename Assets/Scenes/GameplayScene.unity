@@ -546,6 +546,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b44af009f6425443b88f78e382b1090, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _layoutGroup: {fileID: 0}
+  _parentRect: {fileID: 0}
+  _lastChildCount: 0
 --- !u!1 &401531722
 GameObject:
   m_ObjectHideFlags: 0
@@ -1442,7 +1445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardDatabase: {fileID: 11400000, guid: 80591a654c9b7984cbf3362917a2d65f, type: 2}
-  gameSettings: {fileID: 0}
+  gameSettings: {fileID: 11400000, guid: 1a6fb203356a4b94dbef7aff8a35a24a, type: 2}
   cardPrefab: {fileID: 1351202212450163858, guid: ccc16968467b76b4bb129c9ff1c0816e, type: 3}
   hand: {fileID: 383514986}
 --- !u!1 &1341897066
