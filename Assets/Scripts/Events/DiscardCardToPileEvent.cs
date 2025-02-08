@@ -1,9 +1,12 @@
 ﻿namespace DefaultNamespace
 {
-    public class EngineEvent : BaseEvent
+    public class DiscardCardToPileEvent : BaseEvent
     {
-        public EngineEvent()
+        public readonly Card DiscardedCard;
+        
+        public DiscardCardToPileEvent(Card c)
         {
+            DiscardedCard = c;
         }
     }
 }

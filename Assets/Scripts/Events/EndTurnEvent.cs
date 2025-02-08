@@ -1,6 +1,6 @@
 ﻿namespace DefaultNamespace
 {
-    public class EndTurnEvent
+    public class EndTurnEvent : BaseEvent
     {
         
     }

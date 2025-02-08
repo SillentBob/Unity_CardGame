@@ -1,16 +1,16 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System;
 using Const;
+using DefaultNamespace;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(Canvas))]
+[RequireComponent(typeof(CanvasGroup))]
 public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private Image image;
-
     [SerializeField] private bool centerObjectToDragPressOrigin;
 
     public Transform ParentToReturnTo
@@ -19,21 +19,24 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         set => _parentToReturnTo = value;
     }
 
-    private Transform _parentToReturnTo = null;
+    private Transform _parentToReturnTo;
     private Vector3 _dragStartPosition;
     private Vector2 _dragPressToDraggedObjectDelta;
     private bool _isDraggable = true;
-    private DiscardPile _discardPile;
     private GameObject _dragAnchor;
-
+    private CanvasGroup _canvasGroup;
+    private Canvas _canvas;
+    private int _canvasInitialSortingOrder;
     private void Start()
     {
-        _discardPile = GameObject.FindGameObjectWithTag(GameObjectTags.DISCARD_PILE).GetComponent<DiscardPile>();
-        _dragAnchor = GameObject.FindGameObjectWithTag(GameObjectTags.DRAG_ANCHOR);
+        _canvasGroup = GetComponent<CanvasGroup>();
+        _canvas = GetComponent<Canvas>();
+        _canvasInitialSortingOrder = _canvas.sortingOrder;
     }
 
-    public void Setup([NotNull] CardModel model)
+    public void Setup([NotNull] CardModel model, GameObject dragAnchor)
     {
+        _dragAnchor = dragAnchor;
         image.sprite = model.sprite;
 #if UNITY_EDITOR
        name = $"{name}_{model.name}";
@@ -47,22 +50,21 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         {
             return;
         }
-
+        _canvasGroup.blocksRaycasts = false;
+        _canvas.sortingOrder = CanvasSortingOrder.ABOVE_DEFAULT;
+        
         _parentToReturnTo = transform.parent;
         _dragStartPosition = transform.position;
         _dragPressToDraggedObjectDelta = (Vector2)_dragStartPosition - eventData.pressPosition;
         transform.SetParent(_dragAnchor.transform);
-        GetComponent<CanvasGroup>().blocksRaycasts = false;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        //TODO: add position interpolation from last frame to current frame pointer position instead of raw instant position change
         if (!_isDraggable)
         {
             return;
         }
-        
         transform.position = centerObjectToDragPressOrigin
             ? eventData.position
             : eventData.position + _dragPressToDraggedObjectDelta;
@@ -74,9 +76,9 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         {
             return;
         }
-
+        
+        
         DropArea dropZone = null;
-
         foreach (var result in eventData.hovered)
         {
             dropZone = result.GetComponent<DropArea>();
@@ -85,39 +87,23 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
                 break;
             }
         }
-        
-        GetComponent<CanvasGroup>().blocksRaycasts = true;
-
-        Debug.Log($"OnEndDrag dropZone.zoneType: {dropZone?.zoneType}");
-        
         if (dropZone != null)
         {
             if (dropZone.zoneType == DropArea.DropAreaType.PlayArea)
             {
-                SetDraggable(false); //once played, do not allow undo
-                dropZone.GetComponent<PlayArea>().PlayCard(this);
-                return;
-            }
-            else if
-                (dropZone.zoneType ==
-                 DropArea.DropAreaType.DiscardPile) // optional destroy unwanted card to draw more next turn
-            {
-                DiscardCard();
+                _isDraggable = false; //once played, do not allow undo
+                PlayCard();
                 return;
             }
         }
-
         transform.SetParent(_parentToReturnTo);
         transform.position = _dragStartPosition;
+        _canvasGroup.blocksRaycasts = true;
+        _canvas.sortingOrder = _canvasInitialSortingOrder;
     }
 
-    private void SetDraggable(bool draggable)
+    private void PlayCard()
     {
-        _isDraggable = draggable;
-    }
-
-    private void DiscardCard()
-    {
-        _discardPile.AddCardToDiscardPile(this);
+        EventManager.Invoke(new PlayCardEvent(this));
     }
 }

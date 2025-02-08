@@ -1,32 +1,45 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Const;
+using DefaultNamespace;
 using UnityEngine;
 
 public class PlayArea : MonoBehaviour
 {
     private readonly List<Card> _cardsInPlayArea = new();
-    private DiscardPile _discardPile;
 
-    private void Start()
+    private void Awake()
     {
-        _discardPile = GameObject.FindGameObjectWithTag(GameObjectTags.DISCARD_PILE).GetComponent<DiscardPile>();
+        EventManager.AddListener<PlayCardEvent>(OnPlayCardEvent);
+        EventManager.AddListener<RemoveCardsFromPlayAreaEvent>(OnRemoveCardsFromPlayAreaEvent);
     }
 
-    public void PlayCard(Card card)
+    private void OnPlayCardEvent(PlayCardEvent playCardEvent)
     {
-        Debug.Log($"Playarea PlayCard {card.name}");
-        _cardsInPlayArea.Add(card);
-        card.transform.SetParent(this.transform);
+        Debug.Log($"Playarea PlayCard {playCardEvent.PlayedCard.name}");
+        EventManager.Invoke(new RemoveCardFromHandEvent(playCardEvent.PlayedCard));
+        _cardsInPlayArea.Add(playCardEvent.PlayedCard);
+        playCardEvent.PlayedCard.transform.SetParent(this.transform);
     }
-
+    
+    private void OnRemoveCardsFromPlayAreaEvent(RemoveCardsFromPlayAreaEvent evt)
+    {
+        RemoveAllCards();
+    }
+    
     public void RemoveAllCards()
     {
-        _cardsInPlayArea.ForEach(RemoveCard);
+        EventManager.Invoke(new DiscardMultipleCardsToPileEvent(_cardsInPlayArea));
         _cardsInPlayArea.Clear();
     }
 
     private void RemoveCard(Card card)
     {
-        _discardPile.AddCardToDiscardPile(card); //TODO change
+        EventManager.Invoke(new DiscardCardToPileEvent(card));
+    }
+
+    private void OnDestroy()
+    {
+        EventManager.RemoveListener<PlayCardEvent>(OnPlayCardEvent);
     }
 }

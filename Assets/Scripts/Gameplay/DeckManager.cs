@@ -1,34 +1,34 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Const;
 using DefaultNamespace;
 using UnityEngine;
-using UnityEngine.UI;
 using Random = System.Random;
 
 public class DeckManager : MonoBehaviour
 {
+    [Header("Mandatory")]
     [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private GameObject dragAnchor;
+    [SerializeField] private Hand hand;
+    [Header("Optional")]
+    [SerializeField] private ParticleSystem particle;
 
     private CardsDatabase _cardDatabase;
     private GameSettings _gameSettings;
 
-    private Hand _hand;
-    private PlayArea _playArea;
-    private Button _endTurnButton;
-
     private readonly List<CardModel> _deck = new();
+
+    private void Awake()
+    {
+        EventManager.AddListener<EndTurnEvent>(OnEndTurnEvent);
+        EventManager.AddListener<PlayCardEvent>(OnPlayCardEvent);
+    }
 
     private void Start()
     {
         _cardDatabase = Game.Instance.CardDatabase;
         _gameSettings = Game.Instance.GameSettings;
-        _hand = GameObject.FindGameObjectWithTag(GameObjectTags.PLAYER_HAND).GetComponent<Hand>();
-        _playArea = GameObject.FindGameObjectWithTag(GameObjectTags.PLAY_AREA).GetComponent<PlayArea>();
-        _endTurnButton = GameObject.FindGameObjectWithTag(GameObjectTags.END_TURN_BUTTON).GetComponent<Button>();
-        _endTurnButton.onClick.AddListener(EndTurn);
         InitializeDeck();
 
 #if UNITY_EDITOR
@@ -44,6 +44,22 @@ public class DeckManager : MonoBehaviour
 #endif
 
         DrawStartingHand();
+    }
+
+    private void OnEndTurnEvent(EndTurnEvent e)
+    {
+        EndTurn();
+    }
+    
+    private void OnPlayCardEvent(PlayCardEvent e)
+    {
+        if (particle == null)
+        {
+            return;
+        }
+        particle.gameObject.SetActive(true);
+        particle.Stop();
+        particle.Play();
     }
 
     private void InitializeDeck()
@@ -82,10 +98,11 @@ public class DeckManager : MonoBehaviour
             CardModel cardData = _deck[0];
             _deck.RemoveAt(0);
 
-            GameObject cardObject = Instantiate(cardPrefab, _hand.transform);
+            GameObject cardObject = Instantiate(cardPrefab, hand.transform);
             Card card = cardObject.GetComponent<Card>();
-            card.Setup(cardData);
-            _hand.AddCardToHand(card);
+            card.Setup(cardData, dragAnchor);
+            // _hand.AddCardToHand(card);
+            EventManager.Invoke(new AddCardToHandEvent(card));
         }
         else
         {
@@ -93,11 +110,13 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+
     private void EndTurn()
     {
-        _playArea.RemoveAllCards();
-        
-        int cardsToDraw = _gameSettings.playerHandSize - _hand.GetCardCount();
+        // playArea.RemoveAllCards();
+        EventManager.Invoke(new RemoveCardsFromPlayAreaEvent());
+
+        int cardsToDraw = _gameSettings.playerHandSize - hand.GetCardCount();
         for (int i = 0; i < cardsToDraw; i++)
         {
             DrawCard();
@@ -106,6 +125,7 @@ public class DeckManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        _endTurnButton.onClick.RemoveListener(EndTurn);
+        EventManager.RemoveListener<EndTurnEvent>(OnEndTurnEvent);
+        EventManager.RemoveListener<PlayCardEvent>(OnPlayCardEvent);
     }
 }

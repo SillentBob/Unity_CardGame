@@ -1,6 +1,17 @@
-﻿namespace UnityEngine;
+﻿using DefaultNamespace;
+using UnityEngine;
+using UnityEngine.UI;
 
-public class QuitButton
+[RequireComponent(typeof(Button))]
+public class QuitButton : MonoBehaviour
 {
-    
+    private void Start()
+    {
+        GetComponent<Button>().onClick.AddListener(Quit);
+    }
+
+    private void Quit()
+    {
+        Game.Instance.Quit();
+    }
 }

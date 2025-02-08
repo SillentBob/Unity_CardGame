@@ -1,12 +1,9 @@
 ﻿namespace DefaultNamespace
 {
-    public class DiscardCardToPileEvent : BaseEvent
+    public class RemoveCardsFromPlayAreaEvent : BaseEvent
     {
-        public readonly Card DiscardedCard;
-        
-        public DiscardCardToPileEvent(Card c)
+        public RemoveCardsFromPlayAreaEvent()
         {
-            DiscardedCard = c;
         }
     }
 }
