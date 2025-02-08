@@ -7,4 +7,5 @@ public class CardModel
     public string description;
     public int useResourceCost;
     public Sprite sprite;
+    public Sprite spriteReverse;
 }

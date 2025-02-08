@@ -11,8 +11,11 @@ using UnityEngine.UI;
 public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] private Image image;
+    [SerializeField] private Image reverseImage;
     [SerializeField] private bool centerObjectToDragPressOrigin;
-
+    [SerializeField] private Material normalMaterial;
+    [SerializeField] private Material highlightMaterial;
+    
     public Transform ParentToReturnTo
     {
         get => _parentToReturnTo;
@@ -38,6 +41,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     {
         _dragAnchor = dragAnchor;
         image.sprite = model.sprite;
+        reverseImage.sprite = model.spriteReverse;
+        SetCardHighlighted(false);
 #if UNITY_EDITOR
        name = $"{name}_{model.name}";
 #endif
@@ -57,6 +62,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         _dragStartPosition = transform.position;
         _dragPressToDraggedObjectDelta = (Vector2)_dragStartPosition - eventData.pressPosition;
         transform.SetParent(_dragAnchor.transform);
+        SetCardHighlighted(true);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -100,10 +106,16 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         transform.position = _dragStartPosition;
         _canvasGroup.blocksRaycasts = true;
         _canvas.sortingOrder = _canvasInitialSortingOrder;
+        SetCardHighlighted(false);
     }
 
     private void PlayCard()
     {
         EventManager.Invoke(new PlayCardEvent(this));
+    }
+
+    private void SetCardHighlighted(bool value)
+    {
+        image.material = value ? highlightMaterial : normalMaterial;
     }
 }
