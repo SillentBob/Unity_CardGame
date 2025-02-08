@@ -133,7 +133,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4368435}
   - component: {fileID: 4368437}
-  - component: {fileID: 4368436}
   m_Layer: 5
   m_Name: DrawSourceCardsPile
   m_TagString: Untagged
@@ -161,33 +160,7 @@ RectTransform:
   m_AnchorMax: {x: 0.1, y: 0.79}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 1, y: 0.5}
---- !u!114 &4368436
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4368434}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 4
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 0
-  m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 1
-  m_ChildControlHeight: 1
-  m_ChildScaleWidth: 1
-  m_ChildScaleHeight: 1
-  m_ReverseArrangement: 0
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4368437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -337,7 +310,6 @@ RectTransform:
   - {fileID: 383514987}
   - {fileID: 1001496909}
   - {fileID: 235975460}
-  - {fileID: 1827955110}
   m_Father: {fileID: 615925864}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -439,6 +411,7 @@ RectTransform:
   m_Children:
   - {fileID: 371946751}
   - {fileID: 839003799}
+  - {fileID: 1827955110}
   m_Father: {fileID: 233137646}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -558,7 +531,7 @@ GameObject:
   m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &343924069
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1129,7 +1102,6 @@ GameObject:
   - component: {fileID: 591976075}
   - component: {fileID: 591976078}
   - component: {fileID: 591976077}
-  - component: {fileID: 591976076}
   m_Layer: 5
   m_Name: BackgroundCS
   m_TagString: Untagged
@@ -1157,26 +1129,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 250, y: 313.2}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &591976076
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 591976074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 1
-  m_MinWidth: -1
-  m_MinHeight: -1
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
 --- !u!114 &591976077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6472,8 +6424,8 @@ RectTransform:
   m_Father: {fileID: 233137646}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.8804792, y: 0.38837036}
-  m_AnchorMax: {x: 0.98, y: 0.455}
+  m_AnchorMin: {x: 0.88100004, y: 0.601}
+  m_AnchorMax: {x: 0.9744792, y: 0.679}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6797,9 +6749,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 1351202212450163858, guid: ccc16968467b76b4bb129c9ff1c0816e, type: 3}
+  cardSpawnRoot: {fileID: 4368434}
   dragAnchor: {fileID: 1488622695}
   hand: {fileID: 383514986}
-  particle: {fileID: 0}
+  particle: {fileID: 895541532}
 --- !u!1 &1341897066
 GameObject:
   m_ObjectHideFlags: 0
@@ -7233,12 +7186,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 895541530}
-  m_Father: {fileID: 233137646}
-  m_RootOrder: 9
+  m_Father: {fileID: 235975460}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -3.8, y: 0}
+  m_AnchoredPosition: {x: -3.8, y: -504.18018}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1827955111

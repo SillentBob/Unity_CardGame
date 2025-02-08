@@ -9,6 +9,7 @@ public class DeckManager : MonoBehaviour
 {
     [Header("Mandatory")]
     [SerializeField] private GameObject cardPrefab;
+    [SerializeField] private GameObject cardSpawnRoot;
     [SerializeField] private GameObject dragAnchor;
     [SerializeField] private Hand hand;
     [Header("Optional")]
@@ -100,7 +101,13 @@ public class DeckManager : MonoBehaviour
 
             GameObject cardObject = Instantiate(cardPrefab, hand.transform);
             Card card = cardObject.GetComponent<Card>();
+
             card.Setup(cardData, dragAnchor);
+
+            card.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform,false);
+            // card.GraphicsRoot.transform.position = cardSpawnRoot.transform.position;
+            //animate move to card.transform.position
+            
             // _hand.AddCardToHand(card);
             EventManager.Invoke(new AddCardToHandEvent(card));
         }

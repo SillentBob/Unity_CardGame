@@ -8,14 +8,18 @@ using UnityEngine.UI;
 
 [RequireComponent(typeof(Canvas))]
 [RequireComponent(typeof(CanvasGroup))]
-public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
+    [SerializeField] private GameObject graphicsRoot;
     [SerializeField] private Image image;
     [SerializeField] private Image reverseImage;
     [SerializeField] private bool centerObjectToDragPressOrigin;
     [SerializeField] private Material normalMaterial;
     [SerializeField] private Material highlightMaterial;
-    
+    [SerializeField] private Animator cardAnimator;
+    [SerializeField] private ParticleSystem trailParticles;
+
+    public GameObject GraphicsRoot => graphicsRoot;
     public Transform ParentToReturnTo
     {
         get => _parentToReturnTo;
@@ -30,6 +34,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private CanvasGroup _canvasGroup;
     private Canvas _canvas;
     private int _canvasInitialSortingOrder;
+    
+
     private void Start()
     {
         _canvasGroup = GetComponent<CanvasGroup>();
@@ -43,6 +49,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         image.sprite = model.sprite;
         reverseImage.sprite = model.spriteReverse;
         SetCardHighlighted(false);
+        EnableTrailParticles(false);
 #if UNITY_EDITOR
        name = $"{name}_{model.name}";
 #endif
@@ -63,6 +70,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         _dragPressToDraggedObjectDelta = (Vector2)_dragStartPosition - eventData.pressPosition;
         transform.SetParent(_dragAnchor.transform);
         SetCardHighlighted(true);
+        EnableTrailParticles(true);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -117,5 +125,26 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private void SetCardHighlighted(bool value)
     {
         image.material = value ? highlightMaterial : normalMaterial;
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (_isDraggable)
+        {
+            SetCardHighlighted(true);
+        }
+    }
+    
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_isDraggable)
+        {
+            SetCardHighlighted(false);
+        }
+    }
+
+    public void EnableTrailParticles(bool value)
+    {
+        trailParticles?.gameObject.SetActive(value);
     }
 }
