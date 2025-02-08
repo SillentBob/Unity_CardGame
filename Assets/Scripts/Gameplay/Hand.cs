@@ -5,30 +5,31 @@ using UnityEngine;
 
 public class Hand : MonoBehaviour
 {
+    public List<Card> Cards => _cardsInHand;
     private List<Card> _cardsInHand = new();
 
-    private void Awake()
-    {
-        EventManager.AddListener<RemoveCardFromHandEvent>(OnRemoveCardFromHandEvent);
-        EventManager.AddListener<AddCardToHandEvent>(OnAddCardToHandEvent);
-    }
+    // private void Awake()
+    // {
+    //     EventManager.AddListener<RemoveCardFromHandEvent>(OnRemoveCardFromHandEvent);
+    //     EventManager.AddListener<AddCardToHandEvent>(OnAddCardToHandEvent);
+    // }
 
-    private void OnAddCardToHandEvent(AddCardToHandEvent e)
-    {
-        AddCardToHand(e.Card);
-    }
-    
-    private void OnRemoveCardFromHandEvent(RemoveCardFromHandEvent e)
-    {
-        RemoveCardFromHand(e.Card);
-    }
+    // private void OnAddCardToHandEvent(AddCardToHandEvent e)
+    // {
+    //     AddCardToHand(e.Card);
+    // }
+    //
+    // private void OnRemoveCardFromHandEvent(RemoveCardFromHandEvent e)
+    // {
+    //     RemoveCardFromHand(e.Card);
+    // }
 
-    private void AddCardToHand(Card card)
+    public void AddCardToHand(Card card)
     {
         _cardsInHand.Add(card);
     }
 
-    private void RemoveCardFromHand(Card card)
+    public void RemoveCardFromHand(Card card)
     {
         _cardsInHand.Remove(card);
     }
@@ -38,9 +39,9 @@ public class Hand : MonoBehaviour
         return _cardsInHand.Count;
     }
 
-    private void OnDestroy()
-    {
-        EventManager.RemoveListener<AddCardToHandEvent>(OnAddCardToHandEvent);
-        EventManager.RemoveListener<RemoveCardFromHandEvent>(OnRemoveCardFromHandEvent);
-    }
+    // private void OnDestroy()
+    // {
+    //     EventManager.RemoveListener<AddCardToHandEvent>(OnAddCardToHandEvent);
+    //     EventManager.RemoveListener<RemoveCardFromHandEvent>(OnRemoveCardFromHandEvent);
+    // }
 }

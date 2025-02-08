@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DefaultNamespace;
+using DG.Tweening;
 using UnityEngine;
 using Random = System.Random;
 
@@ -90,6 +91,19 @@ public class DeckManager : MonoBehaviour
         {
             DrawCard();
         }
+        AnimateDrawCards();
+    }
+
+    private void AnimateDrawCards()
+    {
+        Sequence mySequence = DOTween.Sequence();
+        mySequence.PrependInterval(0.2f);
+        foreach (var c in hand.Cards)
+        {
+            c.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform,false);
+            mySequence.Append(c.GraphicsRoot.transform.DOMove(c.transform.position, 2f).SetEase(Ease.InSine));
+            mySequence.AppendInterval(1);
+        }
     }
 
     private void DrawCard()
@@ -103,13 +117,13 @@ public class DeckManager : MonoBehaviour
             Card card = cardObject.GetComponent<Card>();
 
             card.Setup(cardData, dragAnchor);
-
-            card.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform,false);
+            // Sequence mySequence = DOTween.Sequence();
+            // card.GraphicsRoot.transform.DOMove(card.transform.position, 2f).SetEase(Ease.InSine);
+            // mySequence.AppendInterval(1);
             // card.GraphicsRoot.transform.position = cardSpawnRoot.transform.position;
             //animate move to card.transform.position
-            
-            // _hand.AddCardToHand(card);
-            EventManager.Invoke(new AddCardToHandEvent(card));
+            hand.AddCardToHand(card);
+            // EventManager.Invoke(new AddCardToHandEvent(card));
         }
         else
         {
