@@ -26,7 +26,7 @@ public class DeckManager : MonoBehaviour
     {
         _cardDatabase = Game.Instance.CardDatabase;
         _gameSettings = Game.Instance.GameSettings;
-        endTurnButton.Button.onClick.AddListener(EndTurn);
+        endTurnButton.Button.onClick.AddListener(EndTurnSequence);
         InitializeDeck();
         ShuffleDeck();
         DrawStartingHand();
@@ -58,13 +58,18 @@ public class DeckManager : MonoBehaviour
         List<Card> newCards = new();
         for (int i = 0; i < _gameSettings.playerHandSize; i++)
         {
-            var drawnCard = TryDrawCard();
+            var drawnCard = TryDrawCardToHand();
             if (drawnCard != null)
             {
                 newCards.Add(drawnCard);
             }
         }
 
+        if (newCards.Count == 0)
+        {
+            Debug.LogError("No cards to start drawing! Specify correct amount in settings");
+            return;
+        }
         _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, () => EnableInput(false),
             () => EnableInput(true)).Forget();
     }
@@ -83,8 +88,7 @@ public class DeckManager : MonoBehaviour
         hand.ReorderCard(stationaryCard, stationaryCardIdx, draggedCardIdx);
     }
 
-
-    private Card TryDrawCard()
+    private Card TryDrawCardToHand()
     {
         Card card = null;
         if (_deck.Count > 0)
@@ -98,27 +102,59 @@ public class DeckManager : MonoBehaviour
             card.OnSwapCardPlaces += OnSwapCardPlaces;
             hand.AddCardToHand(card);
         }
-        else
-        {
-            Debug.Log("Deck to draw from is empty!");
-        }
-
         return card;
     }
 
-    private void EndTurn()
+    private void EndTurnSequence()
     {
-        discardPile.AddCardToPile(playArea.CardsInPlayArea);
-        playArea.RemoveAllCards();
+        EndTurn().Forget();
+    }
+    
+    private async UniTask EndTurn()
+    {
+        EnableInput(false);
+
+        await TryMoveCardsFromPlayAreaToDiscardPile();
+
         int cardsToDraw = _gameSettings.playerHandSize - hand.GetCardCount();
+        Debug.Log($"New cards to draw amt: {cardsToDraw}");
         List<Card> newCards = new();
         for (int i = 0; i < cardsToDraw; i++)
         {
-            newCards.Add(TryDrawCard());
+            Card c = TryDrawCardToHand();
+            if (c != null)
+            {
+                newCards.Add(c);
+            }
         }
 
-        _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, () => EnableInput(false),
-            () => EnableInput(true)).Forget();
+        if (newCards.Count > 0)
+        {
+            Debug.Log($"New cards drawn: {newCards.Count}");
+            await _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, null, null);
+        }
+        if(_deck.Count == 0)
+        {
+            Debug.Log("No more cards to draw!");
+            SetDrawDeckVisible(false);
+        }
+
+        EnableInput(true);
+    }
+
+    private async UniTask TryMoveCardsFromPlayAreaToDiscardPile()
+    {
+        if (playArea.CardsInPlayArea.Count > 0)
+        {
+            //detach graphics from discarded cards
+            playArea.CardsInPlayArea.ForEach(c => c.GraphicsRoot.transform.SetParent(dragAnchor.transform, true));
+            //move Cards roots from play to discard area
+            discardPile.AddCardToPile(playArea.CardsInPlayArea);
+            playArea.RemoveAllCards();
+            //play move detached Card graphics to discard pile
+            await _animations.DiscardCardsSequence(discardPile.DiscardedCards, dragAnchor.transform,null,null);
+            discardPile.DeactivateCardsOnPile();
+        }
     }
 
     private void EnableInput(bool value)
@@ -127,9 +163,13 @@ public class DeckManager : MonoBehaviour
         endTurnButton.Button.interactable = value;
     }
 
+    private void SetDrawDeckVisible(bool visible)
+    {
+        cardSpawnRoot.gameObject.SetActive(visible);
+    }
 
     private void OnDestroy()
     {
-        endTurnButton.Button.onClick.RemoveListener(EndTurn);
+        endTurnButton.Button.onClick.RemoveListener(EndTurnSequence);
     }
 }

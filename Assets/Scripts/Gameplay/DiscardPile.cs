@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class DiscardPile : MonoBehaviour
 {
+    public List<Card> DiscardedCards => _discardedCards;
     private readonly List<Card> _discardedCards = new();
 
     public void AddCardToPile(List<Card> cards)
@@ -10,10 +11,15 @@ public class DiscardPile : MonoBehaviour
         cards.ForEach(AddCardToPile);
     }
 
-    public void AddCardToPile(Card c)
+    private void AddCardToPile(Card c)
     {
         _discardedCards.Add(c);
         c.transform.SetParent(transform);
-        c.gameObject.SetActive(false); //TODO play animation moving to discard pile, then deactivate and move to pool
+    }
+
+    public void DeactivateCardsOnPile()
+    {
+        _discardedCards.ForEach(c=>c.gameObject.SetActive(false)); //TODO return to pool
+        _discardedCards.Clear();
     }
 }
