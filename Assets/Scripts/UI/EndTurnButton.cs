@@ -1,17 +1,14 @@
-﻿using DefaultNamespace;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
 public class EndTurnButton : MonoBehaviour
 {
+    public Button Button => _button;
+    private Button _button;
+
     private void Start()
     {
-        GetComponent<Button>().onClick.AddListener(EndTurn);
-    }
-
-    private void EndTurn()
-    {
-        EventManager.Invoke(new EndTurnEvent());
+        _button = GetComponent<Button>();
     }
 }

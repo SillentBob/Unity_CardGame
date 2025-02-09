@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: URP_OutlineSpriteLitMat
-  m_Shader: {fileID: 4800000, guid: 2085891f20dc4e944ad48c87592670ac, type: 3}
+  m_Name: GlowMaterial2
+  m_Shader: {fileID: -6465566751694194690, guid: 77c03d647d08ecc468bf44a07abb7163, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -20,20 +20,8 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: f10f634ae6eebc645a5ed2dc1eb6eb4f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MaskTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _NormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ba3ad41f5a37b0544bbc5a2ada0098f0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -50,15 +38,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EnableExternalAlpha: 0
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _colorPulsation: 1
-    - _thickness: 5
-    - _useOutline: 1
+    - _effectRadius: 3
+    - _glowAmount: 6
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
-    - _outlineColor: {r: 0, g: 0.76727796, b: 1, a: 1}
+    - _color: {r: 0.25182286, g: 1.2558823, b: 3.5590966, a: 1}
+    - _glowColor: {r: 0.49500743, g: 1.5501548, b: 2.6704347, a: 1}
   m_BuildTextureStacks: []

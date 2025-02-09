@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Cysharp.Threading.Tasks;
 using DefaultNamespace;
 using DG.Tweening;
 using UnityEngine;
@@ -8,60 +8,28 @@ using Random = System.Random;
 
 public class DeckManager : MonoBehaviour
 {
-    [Header("Mandatory")]
-    [SerializeField] private GameObject cardPrefab;
+    [Header("Mandatory")] [SerializeField] private GameObject cardPrefab;
     [SerializeField] private GameObject cardSpawnRoot;
     [SerializeField] private GameObject dragAnchor;
     [SerializeField] private Hand hand;
-    [Header("Optional")]
-    [SerializeField] private ParticleSystem particle;
+    [SerializeField] private PlayArea playArea;
+    [SerializeField] private DiscardPile discardPile;
+    [SerializeField] private EndTurnButton endTurnButton;
+    [Header("Optional")] [SerializeField] private ParticleSystem particle;
 
     private CardsDatabase _cardDatabase;
     private GameSettings _gameSettings;
 
     private readonly List<CardModel> _deck = new();
 
-    private void Awake()
-    {
-        EventManager.AddListener<EndTurnEvent>(OnEndTurnEvent);
-        EventManager.AddListener<PlayCardEvent>(OnPlayCardEvent);
-    }
-
     private void Start()
     {
         _cardDatabase = Game.Instance.CardDatabase;
         _gameSettings = Game.Instance.GameSettings;
+        endTurnButton.Button.onClick.AddListener(EndTurn);
         InitializeDeck();
-
-#if UNITY_EDITOR
-        StringBuilder deckString = new();
-        Debug.Log($"Deck before shuffle: {deckString.AppendJoin(',', _deck.Select(model => model.name))}");
-#endif
-
         ShuffleDeck();
-
-#if UNITY_EDITOR
-        deckString.Clear();
-        Debug.Log($"Deck before shuffle: {deckString.AppendJoin(',', _deck.Select(model => model.name))}");
-#endif
-
-        DrawStartingHand();
-    }
-
-    private void OnEndTurnEvent(EndTurnEvent e)
-    {
-        EndTurn();
-    }
-    
-    private void OnPlayCardEvent(PlayCardEvent e)
-    {
-        if (particle == null)
-        {
-            return;
-        }
-        particle.gameObject.SetActive(true);
-        particle.Stop();
-        particle.Play();
+        DrawStartingHand().Forget();
     }
 
     private void InitializeDeck()
@@ -85,68 +53,116 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private void DrawStartingHand()
+    private async UniTask DrawStartingHand()
     {
+        List<Card> newCards = new();
         for (int i = 0; i < _gameSettings.playerHandSize; i++)
         {
-            DrawCard();
+            var drawnCard = TryDrawCard();
+            if (drawnCard != null)
+            {
+                newCards.Add(drawnCard);
+            }
         }
-        AnimateDrawCards();
+
+        await DrawCardsSequence(newCards);
     }
 
-    private void AnimateDrawCards()
+    private void OnPlayCard(Card c)
     {
-        Sequence mySequence = DOTween.Sequence();
-        mySequence.PrependInterval(0.2f);
-        foreach (var c in hand.Cards)
-        {
-            c.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform,false);
-            mySequence.Append(c.GraphicsRoot.transform.DOMove(c.transform.position, 2f).SetEase(Ease.InSine));
-            mySequence.AppendInterval(1);
-        }
+        c.OnPlayCard -= OnPlayCard;
+        hand.RemoveCardFromHand(c);
+        playArea.AddCardToPlayArea(c);
+        PlayEffectsOnCardPlayed(c);
     }
 
-    private void DrawCard()
+    private Card TryDrawCard()
     {
+        Card card = null;
         if (_deck.Count > 0)
         {
             CardModel cardData = _deck[0];
             _deck.RemoveAt(0);
-
             GameObject cardObject = Instantiate(cardPrefab, hand.transform);
-            Card card = cardObject.GetComponent<Card>();
-
+            card = cardObject.GetComponent<Card>();
             card.Setup(cardData, dragAnchor);
-            // Sequence mySequence = DOTween.Sequence();
-            // card.GraphicsRoot.transform.DOMove(card.transform.position, 2f).SetEase(Ease.InSine);
-            // mySequence.AppendInterval(1);
-            // card.GraphicsRoot.transform.position = cardSpawnRoot.transform.position;
-            //animate move to card.transform.position
+            card.OnPlayCard += OnPlayCard;
             hand.AddCardToHand(card);
-            // EventManager.Invoke(new AddCardToHandEvent(card));
         }
         else
         {
             Debug.Log("Deck to draw from is empty!");
         }
-    }
 
+        return card;
+    }
 
     private void EndTurn()
     {
-        // playArea.RemoveAllCards();
-        EventManager.Invoke(new RemoveCardsFromPlayAreaEvent());
-
+        discardPile.AddCardToPile(playArea.CardsInPlayArea);
+        playArea.RemoveAllCards();
         int cardsToDraw = _gameSettings.playerHandSize - hand.GetCardCount();
+        List<Card> newCards = new();
         for (int i = 0; i < cardsToDraw; i++)
         {
-            DrawCard();
+            newCards.Add(TryDrawCard());
         }
+
+        DrawCardsSequence(newCards).Forget();
+    }
+
+    private void EnableInput(bool value)
+    {
+        hand.Cards.ForEach(c => c.SetDraggable(value));
+        endTurnButton.Button.interactable = value;
+    }
+
+    private async UniTask DrawCardsSequence(List<Card> cards)
+    {
+        cards.ForEach(c => c.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform, false));
+        EnableInput(false);
+        await UniTask.Delay(TimeSpan.FromSeconds(1)); //wait for ui panels to update
+        await AnimateDrawCards(cards);
+        cards.ForEach(c =>
+        {
+            c.GraphicsRoot.transform.SetParent(c.transform, true);
+            c.GraphicsRoot.transform.localPosition = Vector3.zero;
+        });
+        EnableInput(true);
+    }
+
+    private async UniTask AnimateDrawCards(List<Card> cards)
+    {
+        await UniTask.DelayFrame(1);
+        var delayAfterEachCard = 1f;
+        var durationEachCard = 1f;
+        var totalTimeForDraw = cards.Count * delayAfterEachCard + (durationEachCard - delayAfterEachCard);
+        for (var i = cards.Count - 1; i >= 0; i--)
+        {
+            Card c = cards[i];
+            var tween = c.GraphicsRoot.transform.DOMove(c.transform.position, durationEachCard).SetEase(Ease.OutSine)
+                .SetDelay(i * delayAfterEachCard);
+            tween.OnStart(() => c.PlayFlipFromReverseToForeground());
+        }
+
+        await UniTask.Delay(TimeSpan.FromSeconds(totalTimeForDraw));
+        Debug.Log("Draw animations finished");
+    }
+
+    private void PlayEffectsOnCardPlayed(Card c)
+    {
+        if (particle == null)
+        {
+            return;
+        }
+
+        particle.gameObject.SetActive(true);
+        particle.Stop();
+        particle.Play();
     }
 
     private void OnDestroy()
     {
-        EventManager.RemoveListener<EndTurnEvent>(OnEndTurnEvent);
-        EventManager.RemoveListener<PlayCardEvent>(OnPlayCardEvent);
+        endTurnButton.Button.onClick.RemoveListener(EndTurn);
     }
 }

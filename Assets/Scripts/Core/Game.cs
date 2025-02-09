@@ -1,4 +1,5 @@
-﻿using Mercop.Core;
+﻿using System;
+using Mercop.Core;
 using UnityEngine;
 
 namespace DefaultNamespace
@@ -11,6 +12,16 @@ namespace DefaultNamespace
 
         public CardsDatabase CardDatabase => cardDatabase;
         public GameSettings GameSettings => gameSettings;
+        public RenderMode RenderMode => _renderMode;
+        private RenderMode _renderMode;
+        private void Start()
+        {
+            var topCanvas = FindObjectOfType<Canvas>();
+            if (topCanvas != null)
+            {
+                _renderMode =  topCanvas.renderMode;
+            }
+        }
 
         public void Quit()
         {
