@@ -20,4 +20,13 @@ public class Hand : MonoBehaviour
     {
         return _cardsInHand.Count;
     }
+    
+    public void ReorderCard(Card card, int oldIndex, int newIndex)
+    {
+        _cardsInHand.RemoveAt(oldIndex-1);  //Remove from the old index.
+        _cardsInHand.Insert(newIndex-1, card); //Insert card into the new index.
+        //card.transform.SetParent(this.transform); // ensure that it's in the hand.
+        card.transform.SetSiblingIndex(newIndex);
+    }
+    
 }

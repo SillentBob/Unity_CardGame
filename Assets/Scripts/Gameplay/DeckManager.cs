@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DefaultNamespace;
-using DG.Tweening;
+using Gameplay;
 using UnityEngine;
 using Random = System.Random;
 
@@ -20,6 +19,7 @@ public class DeckManager : MonoBehaviour
     private CardsDatabase _cardDatabase;
     private GameSettings _gameSettings;
 
+    private readonly DeckManagerAnimator _animations = new();
     private readonly List<CardModel> _deck = new();
 
     private void Start()
@@ -29,7 +29,7 @@ public class DeckManager : MonoBehaviour
         endTurnButton.Button.onClick.AddListener(EndTurn);
         InitializeDeck();
         ShuffleDeck();
-        DrawStartingHand().Forget();
+        DrawStartingHand();
     }
 
     private void InitializeDeck()
@@ -53,7 +53,7 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private async UniTask DrawStartingHand()
+    private void DrawStartingHand()
     {
         List<Card> newCards = new();
         for (int i = 0; i < _gameSettings.playerHandSize; i++)
@@ -65,7 +65,8 @@ public class DeckManager : MonoBehaviour
             }
         }
 
-        await DrawCardsSequence(newCards);
+        _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, () => EnableInput(false),
+            () => EnableInput(true)).Forget();
     }
 
     private void OnPlayCard(Card c)
@@ -73,8 +74,15 @@ public class DeckManager : MonoBehaviour
         c.OnPlayCard -= OnPlayCard;
         hand.RemoveCardFromHand(c);
         playArea.AddCardToPlayArea(c);
-        PlayEffectsOnCardPlayed(c);
+        _animations.PlayEffectsOnCardPlayed(particle);
     }
+
+    private void OnSwapCardPlaces(Card draggedCard, int draggedCardIdx, Card stationaryCard, int stationaryCardIdx)
+    {
+        hand.ReorderCard(draggedCard, draggedCardIdx, stationaryCardIdx);
+        hand.ReorderCard(stationaryCard, stationaryCardIdx, draggedCardIdx);
+    }
+
 
     private Card TryDrawCard()
     {
@@ -87,6 +95,7 @@ public class DeckManager : MonoBehaviour
             card = cardObject.GetComponent<Card>();
             card.Setup(cardData, dragAnchor);
             card.OnPlayCard += OnPlayCard;
+            card.OnSwapCardPlaces += OnSwapCardPlaces;
             hand.AddCardToHand(card);
         }
         else
@@ -108,7 +117,8 @@ public class DeckManager : MonoBehaviour
             newCards.Add(TryDrawCard());
         }
 
-        DrawCardsSequence(newCards).Forget();
+        _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, () => EnableInput(false),
+            () => EnableInput(true)).Forget();
     }
 
     private void EnableInput(bool value)
@@ -117,49 +127,6 @@ public class DeckManager : MonoBehaviour
         endTurnButton.Button.interactable = value;
     }
 
-    private async UniTask DrawCardsSequence(List<Card> cards)
-    {
-        cards.ForEach(c => c.GraphicsRoot.transform.SetParent(cardSpawnRoot.transform, false));
-        EnableInput(false);
-        await UniTask.Delay(TimeSpan.FromSeconds(1)); //wait for ui panels to update
-        await AnimateDrawCards(cards);
-        cards.ForEach(c =>
-        {
-            c.GraphicsRoot.transform.SetParent(c.transform, true);
-            c.GraphicsRoot.transform.localPosition = Vector3.zero;
-        });
-        EnableInput(true);
-    }
-
-    private async UniTask AnimateDrawCards(List<Card> cards)
-    {
-        await UniTask.DelayFrame(1);
-        var delayAfterEachCard = 1f;
-        var durationEachCard = 1f;
-        var totalTimeForDraw = cards.Count * delayAfterEachCard + (durationEachCard - delayAfterEachCard);
-        for (var i = cards.Count - 1; i >= 0; i--)
-        {
-            Card c = cards[i];
-            var tween = c.GraphicsRoot.transform.DOMove(c.transform.position, durationEachCard).SetEase(Ease.OutSine)
-                .SetDelay(i * delayAfterEachCard);
-            tween.OnStart(() => c.PlayFlipFromReverseToForeground());
-        }
-
-        await UniTask.Delay(TimeSpan.FromSeconds(totalTimeForDraw));
-        Debug.Log("Draw animations finished");
-    }
-
-    private void PlayEffectsOnCardPlayed(Card c)
-    {
-        if (particle == null)
-        {
-            return;
-        }
-
-        particle.gameObject.SetActive(true);
-        particle.Stop();
-        particle.Play();
-    }
 
     private void OnDestroy()
     {

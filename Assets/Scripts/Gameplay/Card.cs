@@ -22,10 +22,10 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     [SerializeField] private bool centerObjectToDragPressOrigin;
     [SerializeField] private Material normalMaterial;
     [SerializeField] private Material highlightMaterial;
-    [SerializeField] private Animator cardAnimator;
     [SerializeField] private ParticleSystem trailParticles;
 
     public event Action<Card> OnPlayCard;
+    public event Action<Card, int, Card, int> OnSwapCardPlaces;
     public CardGraphicsRoot GraphicsRoot => graphicsRoot;
     public Transform ParentToReturnTo { get; set; }
 
@@ -38,13 +38,14 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private int _canvasInitialSortingOrder;
     private CardFlipAnimator cardFlipAnimator;
     private bool _isPlayPossible;
-    
+    private int _originalIndex;
+
     private void Start()
     {
         _canvasGroup = GetComponent<CanvasGroup>();
         _canvas = GetComponent<Canvas>();
         _canvasInitialSortingOrder = _canvas.sortingOrder;
-        cardFlipAnimator = new CardFlipAnimator(cardAnimator);
+        cardFlipAnimator = GetComponent<CardFlipAnimator>();
     }
 
     public void Setup([NotNull] CardModel model, GameObject dragAnchor)
@@ -58,32 +59,34 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         name = $"{name}_{model.name}";
 #endif
     }
-    
+
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!_isDraggable)
         {
             return;
         }
-        
-        
+
+
         _canvasGroup.blocksRaycasts = false;
         _canvas.sortingOrder = CanvasSortingOrder.ABOVE_DEFAULT;
 
         ParentToReturnTo = transform;
         _dragStartPosition = GraphicsRoot.transform.position;
-        
+        _originalIndex = transform.GetSiblingIndex();
+
         if (Game.Instance.RenderMode == RenderMode.ScreenSpaceOverlay)
         {
             _dragPressToDraggedObjectDelta = (Vector2)_dragStartPosition - eventData.pressPosition;
         }
         else
         {
-            _dragPressToDraggedObjectDelta = (Vector2)Camera.main.WorldToScreenPoint(_dragStartPosition) - eventData.pressPosition;
+            _dragPressToDraggedObjectDelta =
+                (Vector2)Camera.main.WorldToScreenPoint(_dragStartPosition) - eventData.pressPosition;
         }
 
         GraphicsRoot.transform.SetParent(_dragAnchor.transform);
-        EnableTrailParticles(true, true).Forget();
+        EnableTrailParticles(true);
         SetCardHighlighted(true);
     }
 
@@ -97,7 +100,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         var targetPos = centerObjectToDragPressOrigin
             ? eventData.position
             : eventData.position + _dragPressToDraggedObjectDelta;
-        
+
         if (Game.Instance.RenderMode == RenderMode.ScreenSpaceOverlay)
         {
             GraphicsRoot.transform.position = targetPos;
@@ -108,7 +111,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             worldPoint.z = 0;
             GraphicsRoot.transform.position = worldPoint;
         }
-        
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -124,30 +126,49 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         _canvasGroup.blocksRaycasts = true;
         _canvas.sortingOrder = _canvasInitialSortingOrder;
         SetCardHighlighted(false);
-        
+
 
         DropArea dropZone = null;
         List<RaycastResult> raycastResults = new();
         EventSystem.current.RaycastAll(eventData, raycastResults);
+
+        Card cardToSwap = null;
         foreach (var result in raycastResults.Select(g => g.gameObject))
-            // foreach (var result in eventData.hovered) this BS is not working
         {
             dropZone = result.GetComponent<DropArea>();
             if (dropZone != null)
             {
                 break;
             }
+
+            if (result != this.gameObject)
+            {
+                var dropOnCard = result.GetComponent<Card>();
+                if (dropOnCard != null)
+                {
+                    cardToSwap = dropOnCard;
+                }
+            }
         }
 
-        if (dropZone != null)
+        if (dropZone != null) //do not allow swapping cards in play area
         {
             if (dropZone.zoneType == DropArea.DropAreaType.PlayArea)
             {
                 _isDraggable = false; //once played, do not allow undo
                 PlayCard();
-                return;
             }
         }
+        else if (cardToSwap != null)
+        {
+            SwapCardsPlaces(_originalIndex, cardToSwap);
+        }
+    }
+
+    private void SwapCardsPlaces(int originalIndex, Card dropOnCard)
+    {
+        var targetCardIdx = dropOnCard.transform.GetSiblingIndex();
+        OnSwapCardPlaces?.Invoke(this, originalIndex, dropOnCard, targetCardIdx);
     }
 
     private void PlayCard()
@@ -165,10 +186,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // if (_isDraggable)
-        // {
-            SetCardHighlighted(true);
-        // }
+        SetCardHighlighted(true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -176,13 +194,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         SetCardHighlighted(false);
     }
 
-    private async UniTask EnableTrailParticles(bool value, bool delay = false)
+    private void EnableTrailParticles(bool value)
     {
-        if (delay)
-        {
-            await UniTask.DelayFrame(10);
-        }
-
         if (trailParticles != null)
         {
             trailParticles.gameObject.SetActive(value);
@@ -204,24 +217,24 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void PlayFlipToReverse()
     {
-        cardFlipAnimator.PlayFlipToReverse();
+        cardFlipAnimator?.PlayFlipToReverse();
     }
 
     public void PlayFlipFromReverseToForeground()
     {
-        cardFlipAnimator.PlayFlipFromReverseToForeground();
+        cardFlipAnimator?.PlayFlipFromReverseToForeground();
     }
-    
+
     private void RefreshHighlightOnPointerPosition()
     {
         List<RaycastResult> raycastResults = new();
         PointerEventData pointerData = new PointerEventData(EventSystem.current);
-        
+
         pointerData.position = Input.mousePosition;
         EventSystem.current.RaycastAll(pointerData, raycastResults);
         foreach (var result in raycastResults.Select(g => g.gameObject))
         {
-            if ( result== this.gameObject || result.transform.IsChildOf(this.transform))
+            if (result == this.gameObject || result.transform.IsChildOf(this.transform))
             {
                 EventSystem.current.SetSelectedGameObject(this.gameObject);
                 SetCardHighlighted(true);
