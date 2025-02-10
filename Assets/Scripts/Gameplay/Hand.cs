@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MethodExtensions;
 using UnityEngine;
 
 public class Hand : MonoBehaviour
@@ -20,13 +21,11 @@ public class Hand : MonoBehaviour
     {
         return _cardsInHand.Count;
     }
-    
-    public void ReorderCard(Card card, int oldIndex, int newIndex)
+
+    public void ReorderCard(Card card, int oldGOIndex, int newGOIndex)
     {
-        _cardsInHand.RemoveAt(oldIndex-1);  //Remove from the old index.
-        _cardsInHand.Insert(newIndex-1, card); //Insert card into the new index.
-        //card.transform.SetParent(this.transform); // ensure that it's in the hand.
-        card.transform.SetSiblingIndex(newIndex);
+        var currentIdx = _cardsInHand.IndexOf(card);
+        _cardsInHand.SafeSwap(currentIdx, newGOIndex);
+        card.transform.SetSiblingIndex(newGOIndex);
     }
-    
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Mercop.Core;
+﻿using Core;
 using UnityEngine;
 
 namespace DefaultNamespace

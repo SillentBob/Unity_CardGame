@@ -9,7 +9,7 @@ public class PlayArea : MonoBehaviour
     public void AddCardToPlayArea(Card  c)
     {
         _cardsInPlayArea.Add(c);
-        c.transform.SetParent(this.transform);
+        c.transform.SetParent(this.transform, false);
     }
     
     public void RemoveAllCards()

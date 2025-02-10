@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Animators;
 using Const;
-using Cysharp.Threading.Tasks;
 using DefaultNamespace;
 using Gameplay;
 using JetBrains.Annotations;
+using MethodExtensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -45,7 +45,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         _canvasGroup = GetComponent<CanvasGroup>();
         _canvas = GetComponent<Canvas>();
         _canvasInitialSortingOrder = _canvas.sortingOrder;
-        cardFlipAnimator = GetComponent<CardFlipAnimator>();
+        
     }
 
     public void Setup([NotNull] CardModel model, GameObject dragAnchor)
@@ -55,6 +55,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         reverseImage.sprite = model.spriteReverse;
         SetCardHighlighted(false);
         EnableTrailParticles(false);
+        cardFlipAnimator = GetComponent<CardFlipAnimator>();
 #if UNITY_EDITOR
         name = $"{name}_{model.name}";
 #endif
@@ -66,7 +67,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         {
             return;
         }
-
 
         _canvasGroup.blocksRaycasts = false;
         _canvas.sortingOrder = CanvasSortingOrder.ABOVE_DEFAULT;
@@ -85,7 +85,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
                 (Vector2)Camera.main.WorldToScreenPoint(_dragStartPosition) - eventData.pressPosition;
         }
 
-        GraphicsRoot.transform.SetParent(_dragAnchor.transform);
+        DetachGraphicsRootFromCard(_dragAnchor.transform, true);
         EnableTrailParticles(true);
         SetCardHighlighted(true);
     }
@@ -120,14 +120,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             return;
         }
 
-        EnableTrailParticles(false);
-        GraphicsRoot.transform.SetParent(transform);
-        GraphicsRoot.transform.position = _dragStartPosition;
-        _canvasGroup.blocksRaycasts = true;
-        _canvas.sortingOrder = _canvasInitialSortingOrder;
-        SetCardHighlighted(false);
-
-
         DropArea dropZone = null;
         List<RaycastResult> raycastResults = new();
         EventSystem.current.RaycastAll(eventData, raycastResults);
@@ -151,17 +143,24 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             }
         }
 
-        if (dropZone != null) //do not allow swapping cards in play area
+        EnableTrailParticles(false);
+        _canvasGroup.blocksRaycasts = true;
+        _canvas.sortingOrder = _canvasInitialSortingOrder;
+        SetCardHighlighted(false);
+        
+        if (dropZone != null && dropZone.zoneType == DropArea.DropAreaType.PlayArea) //do not allow swapping cards in play area
         {
-            if (dropZone.zoneType == DropArea.DropAreaType.PlayArea)
-            {
-                _isDraggable = false; //once played, do not allow undo
-                PlayCard();
-            }
+            SetDraggable(false); //once played, do not allow undo
+            PlayCard();
         }
         else if (cardToSwap != null)
         {
             SwapCardsPlaces(_originalIndex, cardToSwap);
+        }
+        else
+        {
+            //not dropped on interactable object
+            ReattachGraphicsRootToCard();
         }
     }
 
@@ -186,7 +185,10 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        SetCardHighlighted(true);
+        if (_isDraggable)
+        {
+            SetCardHighlighted(true);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -241,4 +243,18 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             }
         }
     }
+
+    public void ReattachGraphicsRootToCard()
+    {
+        GraphicsRoot.transform.SetParent(transform);
+        //recenter and stretch to its original values (reparenting changes sizedelta)
+        GraphicsRoot.transform.localPosition = Vector3.zero;
+        GraphicsRoot.gameObject.RectTransform().sizeDelta = Vector2.zero;
+    }
+    
+    public void DetachGraphicsRootFromCard(Transform newParent, bool worldPositionStays)
+    {
+        GraphicsRoot.transform.SetParent(newParent, worldPositionStays);
+    }
+    
 }

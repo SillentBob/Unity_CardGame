@@ -14,12 +14,11 @@ public class DiscardPile : MonoBehaviour
     private void AddCardToPile(Card c)
     {
         _discardedCards.Add(c);
-        c.transform.SetParent(transform);
+        c.transform.SetParent(transform, true);
     }
 
     public void DeactivateCardsOnPile()
     {
-        _discardedCards.ForEach(c=>c.gameObject.SetActive(false)); //TODO return to pool
         _discardedCards.Clear();
     }
 }

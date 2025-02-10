@@ -5,16 +5,17 @@ using Gameplay;
 using UnityEngine;
 using Random = System.Random;
 
-public class DeckManager : MonoBehaviour
+public partial class DeckManager : MonoBehaviour
 {
-    [Header("Mandatory")] [SerializeField] private GameObject cardPrefab;
+    [Header("Mandatory")] 
     [SerializeField] private GameObject cardSpawnRoot;
     [SerializeField] private GameObject dragAnchor;
     [SerializeField] private Hand hand;
     [SerializeField] private PlayArea playArea;
     [SerializeField] private DiscardPile discardPile;
     [SerializeField] private EndTurnButton endTurnButton;
-    [Header("Optional")] [SerializeField] private ParticleSystem particle;
+    [Header("Optional")] 
+    [SerializeField] private ParticleSystem particle;
 
     private CardsDatabase _cardDatabase;
     private GameSettings _gameSettings;
@@ -26,7 +27,7 @@ public class DeckManager : MonoBehaviour
     {
         _cardDatabase = Game.Instance.CardDatabase;
         _gameSettings = Game.Instance.GameSettings;
-        endTurnButton.Button.onClick.AddListener(EndTurnSequence);
+        endTurnButton.Button.onClick.AddListener(EndTurn);
         InitializeDeck();
         ShuffleDeck();
         DrawStartingHand();
@@ -62,6 +63,7 @@ public class DeckManager : MonoBehaviour
             if (drawnCard != null)
             {
                 newCards.Add(drawnCard);
+                hand.AddCardToHand(drawnCard);
             }
         }
 
@@ -70,22 +72,19 @@ public class DeckManager : MonoBehaviour
             Debug.LogError("No cards to start drawing! Specify correct amount in settings");
             return;
         }
+
         _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, () => EnableInput(false),
             () => EnableInput(true)).Forget();
     }
 
     private void OnPlayCard(Card c)
     {
-        c.OnPlayCard -= OnPlayCard;
-        hand.RemoveCardFromHand(c);
-        playArea.AddCardToPlayArea(c);
-        _animations.PlayEffectsOnCardPlayed(particle);
+        PlayCardSequence(c).Forget();
     }
 
     private void OnSwapCardPlaces(Card draggedCard, int draggedCardIdx, Card stationaryCard, int stationaryCardIdx)
     {
-        hand.ReorderCard(draggedCard, draggedCardIdx, stationaryCardIdx);
-        hand.ReorderCard(stationaryCard, stationaryCardIdx, draggedCardIdx);
+        OnSwapCardPlacesSequence(draggedCard, draggedCardIdx, stationaryCard, stationaryCardIdx).Forget();
     }
 
     private Card TryDrawCardToHand()
@@ -95,66 +94,20 @@ public class DeckManager : MonoBehaviour
         {
             CardModel cardData = _deck[0];
             _deck.RemoveAt(0);
-            GameObject cardObject = Instantiate(cardPrefab, hand.transform);
-            card = cardObject.GetComponent<Card>();
+            
+            card = _cardsPool.Get();
+            card.transform.SetParent(hand.transform);
             card.Setup(cardData, dragAnchor);
             card.OnPlayCard += OnPlayCard;
             card.OnSwapCardPlaces += OnSwapCardPlaces;
-            hand.AddCardToHand(card);
         }
+
         return card;
     }
-
-    private void EndTurnSequence()
-    {
-        EndTurn().Forget();
-    }
     
-    private async UniTask EndTurn()
+    private void EndTurn()
     {
-        EnableInput(false);
-
-        await TryMoveCardsFromPlayAreaToDiscardPile();
-
-        int cardsToDraw = _gameSettings.playerHandSize - hand.GetCardCount();
-        Debug.Log($"New cards to draw amt: {cardsToDraw}");
-        List<Card> newCards = new();
-        for (int i = 0; i < cardsToDraw; i++)
-        {
-            Card c = TryDrawCardToHand();
-            if (c != null)
-            {
-                newCards.Add(c);
-            }
-        }
-
-        if (newCards.Count > 0)
-        {
-            Debug.Log($"New cards drawn: {newCards.Count}");
-            await _animations.DrawCardsSequence(newCards, cardSpawnRoot.transform, null, null);
-        }
-        if(_deck.Count == 0)
-        {
-            Debug.Log("No more cards to draw!");
-            SetDrawDeckVisible(false);
-        }
-
-        EnableInput(true);
-    }
-
-    private async UniTask TryMoveCardsFromPlayAreaToDiscardPile()
-    {
-        if (playArea.CardsInPlayArea.Count > 0)
-        {
-            //detach graphics from discarded cards
-            playArea.CardsInPlayArea.ForEach(c => c.GraphicsRoot.transform.SetParent(dragAnchor.transform, true));
-            //move Cards roots from play to discard area
-            discardPile.AddCardToPile(playArea.CardsInPlayArea);
-            playArea.RemoveAllCards();
-            //play move detached Card graphics to discard pile
-            await _animations.DiscardCardsSequence(discardPile.DiscardedCards, dragAnchor.transform,null,null);
-            discardPile.DeactivateCardsOnPile();
-        }
+        EndTurnSequence().Forget();
     }
 
     private void EnableInput(bool value)
@@ -170,6 +123,6 @@ public class DeckManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        endTurnButton.Button.onClick.RemoveListener(EndTurnSequence);
+        endTurnButton.Button.onClick.RemoveListener(EndTurn);
     }
 }

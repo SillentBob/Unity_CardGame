@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 
-public static class GameObjectExt
+namespace MethodExtensions
 {
-    public static RectTransform RectTransform(this GameObject go)
+    public static class GameObjectExt
     {
-        return (RectTransform)(go.transform);
+        public static RectTransform RectTransform(this GameObject go)
+        {
+            return (RectTransform)(go.transform);
+        }
     }
 }
