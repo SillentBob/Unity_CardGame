@@ -25,6 +25,7 @@ public partial class DeckManager : MonoBehaviour
 
     private void Start()
     {
+        _cardsPool = GetComponent<CardsPool>().Pool;
         _cardDatabase = Game.Instance.CardDatabase;
         _gameSettings = Game.Instance.GameSettings;
         endTurnButton.Button.onClick.AddListener(EndTurn);
