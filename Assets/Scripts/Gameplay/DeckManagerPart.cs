@@ -10,11 +10,7 @@ using UnityEngine.Pool;
 public partial class DeckManager
 {
     private IObjectPool<Card> _cardsPool;
-    private void Awake()
-    {
-        _cardsPool = GetComponent<CardsPool>().Pool;
-    }
-
+    
     private async UniTask TryMoveCardsFromPlayAreaToDiscardPile()
     {
         if (playArea.CardsInPlayArea.Count > 0)
